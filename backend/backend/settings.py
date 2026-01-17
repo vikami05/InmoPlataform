@@ -4,8 +4,8 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-@l5ndi*exm4_4zy)1&)3n!z=2ceu+(px+5thk(yazzm*m-iy%%'
-DEBUG = True
-ALLOWED_HOSTS = ["*"]  # ← permite requests desde localhost y tests
+DEBUG = False
+ALLOWED_HOSTS = ["inmoplataform-backend.onrender.com",]  # ← permite requests desde localhost y tests
 
 # ------------------------------
 # Apps
@@ -99,6 +99,7 @@ STATIC_URL = 'static/'
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
+    "https://inmoplataform-frontend.onrender.com",
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",
@@ -134,6 +135,7 @@ SIMPLE_JWT = {
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://inmoplataform-frontend.onrender.com",
 ]
 
 STATIC_ROOT = BASE_DIR / 'static'
