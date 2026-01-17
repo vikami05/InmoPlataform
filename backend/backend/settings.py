@@ -1,16 +1,20 @@
 from pathlib import Path
 from datetime import timedelta
 
+# ------------------------------
+# BASE
+# ------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-@l5ndi*exm4_4zy)1&)3n!z=2ceu+(px+5thk(yazzm*m-iy%%'
-DEBUG = False
-ALLOWED_HOSTS = ["inmoplataform-backend.onrender.com",]  # ← permite requests desde localhost y tests
+DEBUG = False  # 🚨 producción: siempre False
+ALLOWED_HOSTS = ["inmoplataform-backend.onrender.com"]
 
 # ------------------------------
-# Apps
+# APPS
 # ------------------------------
 INSTALLED_APPS = [
+    # 🔹 Django default
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,10 +32,10 @@ INSTALLED_APPS = [
 ]
 
 # ------------------------------
-# Middleware
+# MIDDLEWARE
 # ------------------------------
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # debe ir arriba de CommonMiddleware
+    "corsheaders.middleware.CorsMiddleware",  # siempre arriba de CommonMiddleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -61,17 +65,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ------------------------------
-# Base de datos
+# DATABASE
 # ------------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',  # 🚨 para producción real: usar PostgreSQL
     }
 }
 
 # ------------------------------
-# Validaciones de contraseña
+# VALIDACIÓN CONTRASEÑAS
 # ------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -81,7 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ------------------------------
-# Internacionalización
+# INTERNACIONALIZACIÓN
 # ------------------------------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -89,17 +93,20 @@ USE_I18N = True
 USE_TZ = True
 
 # ------------------------------
-# Archivos estáticos
+# STATIC FILES (producción)
 # ------------------------------
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'  # collectstatic lo llenará aquí
+# Opcional: para servir media files si los usas
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # ------------------------------
 # CORS
 # ------------------------------
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # React frontend
-    "https://inmoplataform-frontend.onrender.com",
+    "https://inmoplataform-frontend.onrender.com",  # solo HTTPS en producción
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",
@@ -112,14 +119,14 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
 # ------------------------------
-# REST Framework + JWT
+# REST FRAMEWORK + JWT
 # ------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'core.authentication.JWTAuthenticationFromCookie',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # ⚠️ para pruebas y registro/login
+        'rest_framework.permissions.AllowAny',  # ⚠️ para pruebas login/registro
     ),
 }
 
@@ -130,12 +137,18 @@ SIMPLE_JWT = {
 }
 
 # ------------------------------
-# CSRF Trusted Origins
+# CSRF
 # ------------------------------
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
     "https://inmoplataform-frontend.onrender.com",
 ]
 
-STATIC_ROOT = BASE_DIR / 'static'
+# ------------------------------
+# OTROS AJUSTES DE SEGURIDAD
+# ------------------------------
+SESSION_COOKIE_SECURE = True   # cookies solo por HTTPS
+CSRF_COOKIE_SECURE = True      # CSRF solo por HTTPS
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_SSL_REDIRECT = True      # redirige HTTP → HTTPS
+X_FRAME_OPTIONS = "DENY"
