@@ -1,4 +1,3 @@
-// Profile.jsx
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -23,15 +22,17 @@ export default function Profile() {
     const fetchData = async () => {
       try {
         // 1️⃣ Traer perfil del usuario logueado
-        const userRes = await axios.get("http://localhost:8000/api/me/", {
-          withCredentials: true,
-        });
+        const userRes = await axios.get(
+          "https://inmoplataform-backend.onrender.com/api/me/",
+          { withCredentials: true }
+        );
         setUser(userRes.data);
 
         // 2️⃣ Traer favoritos del usuario
-        const favRes = await axios.get("http://localhost:8000/api/favorites/", {
-          withCredentials: true,
-        });
+        const favRes = await axios.get(
+          "https://inmoplataform-backend.onrender.com/api/favorites/",
+          { withCredentials: true }
+        );
         const favProperties = favRes.data.map((fav) => fav.property);
         setFavorites(favProperties);
       } catch (err) {
@@ -63,7 +64,7 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:8000/api/logout/",
+        "https://inmoplataform-backend.onrender.com/api/logout/",
         {},
         { withCredentials: true }
       );
@@ -151,7 +152,7 @@ export default function Profile() {
                   height="180"
                   image={
                     property.image_url ||
-                    `http://localhost:8000${property.image}`
+                    `https://inmoplataform-backend.onrender.com${property.image}`
                   }
                   alt={property.title}
                 />

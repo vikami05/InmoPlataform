@@ -15,11 +15,11 @@ const ContactarAgente = () => {
     mensaje: "",
     agenteId: "",
   });
-  const [success, setSuccess] = useState(false); // 👈 para mostrar mensaje de éxito
-  const [errorMsg, setErrorMsg] = useState(""); // 👈 para errores
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // 🔹 Simulación de agentes (luego podrás traerlos desde el backend)
+    // 🔹 Simulación de agentes (luego se puede traer desde el backend)
     const agentesMock = [
       { id: 1, nombre: "María López" },
       { id: 2, nombre: "Juan Pérez" },
@@ -36,17 +36,21 @@ const ContactarAgente = () => {
     e.preventDefault();
 
     try {
-      // 🚀 Enviar consulta al backend Django
-      const response = await axios.post("http://localhost:8000/api/consultas/", {
-        nombre: formData.nombre,
-        email: formData.email,
-        mensaje: formData.mensaje,
-        agente: formData.agenteId,
-        propiedad: propiedadId,
-      });
+      // 🚀 Enviar consulta al backend Django online
+      const response = await axios.post(
+        "https://inmoplataform-backend.onrender.com/api/consultas/",
+        {
+          nombre: formData.nombre,
+          email: formData.email,
+          mensaje: formData.mensaje,
+          agente: formData.agenteId,
+          propiedad: propiedadId,
+        },
+        { withCredentials: true } // ⚡ importante si tu backend usa cookies HttpOnly
+      );
 
       console.log("✅ Respuesta del servidor:", response.data);
-      setSuccess(true); // 👈 mostrar mensaje de éxito
+      setSuccess(true); // mostrar mensaje de éxito
       setErrorMsg(""); // limpiar errores
 
       // 🧹 limpiar campos del formulario
@@ -57,9 +61,14 @@ const ContactarAgente = () => {
         agenteId: "",
       });
     } catch (error) {
-      console.error("❌ Error al enviar la consulta:", error.response?.data || error);
+      console.error(
+        "❌ Error al enviar la consulta:",
+        error.response?.data || error
+      );
       setSuccess(false);
-      setErrorMsg("❌ Ocurrió un error al enviar la consulta. Verificá los datos e intentá nuevamente.");
+      setErrorMsg(
+        "❌ Ocurrió un error al enviar la consulta. Verificá los datos e intentá nuevamente."
+      );
     }
   };
 

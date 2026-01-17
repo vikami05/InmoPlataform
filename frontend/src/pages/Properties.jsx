@@ -16,7 +16,7 @@ export default function Properties() {
   // Cargar datos desde backend al iniciar el componente
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/properties/") // endpoint Django
+      .get("https://inmoplataform-backend.onrender.com/api/properties/") // backend online
       .then((res) => {
         setProperties(res.data);
         setFilteredProperties(res.data);
@@ -37,7 +37,7 @@ export default function Properties() {
           : prop.rooms === Number(rooms)
         : true;
       const matchPrice = maxPrice
-        ? Number(prop.price) <= Number(maxPrice) // suponiendo que price es número
+        ? Number(prop.price) <= Number(maxPrice)
         : true;
 
       return matchLocation && matchType && matchRooms && matchPrice;

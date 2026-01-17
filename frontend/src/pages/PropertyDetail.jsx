@@ -69,7 +69,7 @@ export default function PropertyDetail() {
   // 🚀 Traer propiedad
   useEffect(() => {
     axios
-      .get(`http://localhost:8000/api/properties/${id}/`)
+      .get(`https://inmoplataform-backend.onrender.com/api/properties/${id}/`)
       .then((res) => setProperty(res.data))
       .catch((err) => console.log(err));
   }, [id]);
@@ -78,14 +78,16 @@ export default function PropertyDetail() {
   useEffect(() => {
     const fetchUserAndFavorites = async () => {
       try {
-        const userRes = await axios.get("http://localhost:8000/api/me/", {
-          withCredentials: true,
-        });
+        const userRes = await axios.get(
+          "https://inmoplataform-backend.onrender.com/api/me/",
+          { withCredentials: true }
+        );
         setUser(userRes.data);
 
-        const favRes = await axios.get("http://localhost:8000/api/favorites/", {
-          withCredentials: true,
-        });
+        const favRes = await axios.get(
+          "https://inmoplataform-backend.onrender.com/api/favorites/",
+          { withCredentials: true }
+        );
         const favIds = favRes.data.map((f) => f.property.id);
         setIsFavorite(favIds.includes(Number(id)));
       } catch {
@@ -117,7 +119,7 @@ export default function PropertyDetail() {
 
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/favorites/${id}/toggle/`,
+        `https://inmoplataform-backend.onrender.com/api/favorites/${id}/toggle/`,
         {},
         { withCredentials: true }
       );
@@ -133,7 +135,7 @@ export default function PropertyDetail() {
     }
   };
 
-  // 👉 Nueva función para ir al formulario de contacto
+  // 👉 Redirigir al formulario de contacto
   const irAContactarAgente = () => {
     navigate(`/contactar-agente/${id}`);
   };
@@ -179,7 +181,6 @@ export default function PropertyDetail() {
                 {isFavorite ? "❤️ En favoritos" : "Agregar a favoritos"}
               </Button>
 
-              {/* ✅ Modificado: ahora redirige al formulario */}
               <Button variant="contained" color="primary" onClick={irAContactarAgente}>
                 Contactar agente
               </Button>

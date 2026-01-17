@@ -14,7 +14,7 @@ export default function Login() {
   // Verifica si ya hay sesión activa
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/me/", { withCredentials: true })
+      .get("https://inmoplataform-backend.onrender.com/api/me/", { withCredentials: true })
       .then(() => navigate("/profile")) // Si hay cookie válida, va directo al perfil
       .catch(() => {}); // no logueado, no hacer nada
   }, [navigate]);
@@ -25,7 +25,7 @@ export default function Login() {
 
     try {
       await axios.post(
-        "http://localhost:8000/api/login/",
+        "https://inmoplataform-backend.onrender.com/api/login/",
         { email, password },
         { withCredentials: true } // ⚡ importante para recibir la cookie HttpOnly
       );
