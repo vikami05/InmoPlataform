@@ -7,14 +7,14 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-@l5ndi*exm4_4zy)1&)3n!z=2ceu+(px+5thk(yazzm*m-iy%%'
-DEBUG = False  # 🚨 producción: siempre False
+DEBUG = False
 ALLOWED_HOSTS = ["inmoplataform-backend.onrender.com"]
 
 # ------------------------------
 # APPS
 # ------------------------------
 INSTALLED_APPS = [
-    # 🔹 Django default
+    # Django default
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -22,12 +22,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # 🔹 externas
+    # externas
     "corsheaders",
     'rest_framework',
     'rest_framework.authtoken',
 
-    # 🔹 app local
+    # app local
     'core',
 ]
 
@@ -69,13 +69,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # ------------------------------
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # 🚨 para producción real: usar PostgreSQL
+        'ENGINE': 'django.db.backends.sqlite3',  # ⚠️ cambiar a PostgreSQL si crece
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
 # ------------------------------
-# VALIDACIÓN CONTRASEÑAS
+# PASSWORD VALIDATORS
 # ------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -85,7 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ------------------------------
-# INTERNACIONALIZACIÓN
+# INTERNATIONALIZATION
 # ------------------------------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -93,11 +93,10 @@ USE_I18N = True
 USE_TZ = True
 
 # ------------------------------
-# STATIC FILES (producción)
+# STATIC FILES
 # ------------------------------
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static'  # collectstatic lo llenará aquí
-# Opcional: para servir media files si los usas
+STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -106,7 +105,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ------------------------------
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "https://inmoplataform-frontend.onrender.com",  # solo HTTPS en producción
+    "https://inmoplataform-frontend.onrender.com",  # frontend en Render
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",
@@ -123,10 +122,10 @@ CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 # ------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'core.authentication.JWTAuthenticationFromCookie',
+        'core.authentication.JWTAuthenticationFromCookie',  # acepta JWT desde cookies
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # ⚠️ para pruebas login/registro
+        'rest_framework.permissions.AllowAny',  # login/registro abiertos
     ),
 }
 
@@ -142,13 +141,13 @@ SIMPLE_JWT = {
 CSRF_TRUSTED_ORIGINS = [
     "https://inmoplataform-frontend.onrender.com",
 ]
+CSRF_COOKIE_SECURE = True  # solo HTTPS
+SESSION_COOKIE_SECURE = True
 
 # ------------------------------
-# OTROS AJUSTES DE SEGURIDAD
+# SEGURIDAD ADICIONAL
 # ------------------------------
-SESSION_COOKIE_SECURE = True   # cookies solo por HTTPS
-CSRF_COOKIE_SECURE = True      # CSRF solo por HTTPS
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = True      # redirige HTTP → HTTPS
+SECURE_SSL_REDIRECT = True
 X_FRAME_OPTIONS = "DENY"

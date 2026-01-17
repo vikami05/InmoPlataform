@@ -46,14 +46,16 @@ const ContactarAgente = () => {
           agente: formData.agenteId,
           propiedad: propiedadId,
         },
-        { withCredentials: true } // ⚡ importante si tu backend usa cookies HttpOnly
+        {
+          withCredentials: true, // ⚡ Muy importante para que se envíen cookies HttpOnly
+        }
       );
 
       console.log("✅ Respuesta del servidor:", response.data);
-      setSuccess(true); // mostrar mensaje de éxito
-      setErrorMsg(""); // limpiar errores
+      setSuccess(true); 
+      setErrorMsg(""); 
 
-      // 🧹 limpiar campos del formulario
+      // Limpiar campos del formulario
       setFormData({
         nombre: "",
         email: "",
@@ -61,10 +63,7 @@ const ContactarAgente = () => {
         agenteId: "",
       });
     } catch (error) {
-      console.error(
-        "❌ Error al enviar la consulta:",
-        error.response?.data || error
-      );
+      console.error("❌ Error al enviar la consulta:", error.response?.data || error);
       setSuccess(false);
       setErrorMsg(
         "❌ Ocurrió un error al enviar la consulta. Verificá los datos e intentá nuevamente."
@@ -108,7 +107,7 @@ const ContactarAgente = () => {
             Contactar Agente
           </Typography>
 
-          {/* ✅ Mensajes de estado */}
+          {/* Mensajes de estado */}
           {success && (
             <Alert
               severity="success"
