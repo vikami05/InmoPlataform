@@ -85,28 +85,28 @@ export default function PropertyDetail() {
   // 🚀 Traer propiedad
   useEffect(() => {
     axios
-      .get(`https://inmoplataform-backend.onrender.com/api/properties/${id}/`, {
+      .get(`/api/properties/${id}/`, {
         withCredentials: true,
         headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       .then((res) => setProperty(res.data))
-      .catch((err) => console.log(err));
+      .catch((err) => console.error("❌ Error al obtener propiedad:", err));
   }, [id]);
 
   // 🚀 Traer usuario logueado y favoritos
   useEffect(() => {
     const fetchUserAndFavorites = async () => {
       try {
-        const userRes = await axios.get(
-          "https://inmoplataform-backend.onrender.com/api/me/",
-          { withCredentials: true, headers: { "X-CSRFToken": getCookie("csrftoken") } }
-        );
+        const userRes = await axios.get("/api/me/", {
+          withCredentials: true,
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        });
         setUser(userRes.data);
 
-        const favRes = await axios.get(
-          "https://inmoplataform-backend.onrender.com/api/favorites/",
-          { withCredentials: true, headers: { "X-CSRFToken": getCookie("csrftoken") } }
-        );
+        const favRes = await axios.get("/api/favorites/", {
+          withCredentials: true,
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        });
         const favIds = favRes.data.map((f) => f.property.id);
         setIsFavorite(favIds.includes(Number(id)));
       } catch {
@@ -138,7 +138,7 @@ export default function PropertyDetail() {
 
     try {
       const res = await axios.post(
-        `https://inmoplataform-backend.onrender.com/api/favorites/${id}/toggle/`,
+        `/api/favorites/${id}/toggle/`,
         {},
         {
           withCredentials: true,
@@ -152,7 +152,7 @@ export default function PropertyDetail() {
         setIsFavorite(false);
       }
     } catch (err) {
-      console.error("Error favoritos:", err);
+      console.error("❌ Error favoritos:", err);
       alert("⚠️ Error al actualizar favoritos");
     }
   };

@@ -35,7 +35,7 @@ const ContactarAgente = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // 🔹 Simulación de agentes (luego se puede traer desde el backend)
+    // 🔹 Simulación de agentes (puede venir luego del backend)
     const agentesMock = [
       { id: 1, nombre: "María López" },
       { id: 2, nombre: "Juan Pérez" },
@@ -52,9 +52,9 @@ const ContactarAgente = () => {
     e.preventDefault();
 
     try {
-      // 🚀 Enviar consulta al backend Django online
+      // 🚀 Enviar consulta al backend Django
       const response = await axios.post(
-        "https://inmoplataform-backend.onrender.com/api/consultas/",
+        "/api/consultas/",
         {
           nombre: formData.nombre,
           email: formData.email,
@@ -63,9 +63,9 @@ const ContactarAgente = () => {
           propiedad: propiedadId,
         },
         {
-          withCredentials: true, // ⚡ envía cookies JWT HttpOnly
+          withCredentials: true, // ⚡ importante para enviar cookies HttpOnly
           headers: {
-            "X-CSRFToken": getCookie("csrftoken"), // ⚡ CSRF requerido por Django
+            "X-CSRFToken": getCookie("csrftoken"), // ⚡ requerido por Django
             "Content-Type": "application/json",
           },
         }
@@ -199,7 +199,13 @@ const ContactarAgente = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                sx={{ px: 4, py: 1, borderRadius: 2, textTransform: "none", fontSize: "1rem" }}
+                sx={{
+                  px: 4,
+                  py: 1,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontSize: "1rem",
+                }}
               >
                 Enviar mensaje
               </Button>
@@ -209,7 +215,12 @@ const ContactarAgente = () => {
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{ mt: 3, textAlign: "center", cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+            sx={{
+              mt: 3,
+              textAlign: "center",
+              cursor: "pointer",
+              "&:hover": { textDecoration: "underline" },
+            }}
             onClick={() => navigate(-1)}
           >
             ← Volver a la propiedad

@@ -38,23 +38,17 @@ export default function Profile() {
     const fetchData = async () => {
       try {
         // 1️⃣ Traer perfil del usuario logueado
-        const userRes = await axios.get(
-          "https://inmoplataform-backend.onrender.com/api/me/",
-          {
-            withCredentials: true,
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
-          }
-        );
+        const userRes = await axios.get("/api/me/", {
+          withCredentials: true,
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        });
         setUser(userRes.data);
 
         // 2️⃣ Traer favoritos del usuario
-        const favRes = await axios.get(
-          "https://inmoplataform-backend.onrender.com/api/favorites/",
-          {
-            withCredentials: true,
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
-          }
-        );
+        const favRes = await axios.get("/api/favorites/", {
+          withCredentials: true,
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        });
         const favProperties = favRes.data.map((fav) => fav.property);
         setFavorites(favProperties);
       } catch (err) {
@@ -86,7 +80,7 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "https://inmoplataform-backend.onrender.com/api/logout/",
+        "/api/logout/",
         {},
         {
           withCredentials: true,
@@ -176,8 +170,7 @@ export default function Profile() {
                   component="img"
                   height="180"
                   image={
-                    property.image_url ||
-                    `https://inmoplataform-backend.onrender.com${property.image}`
+                    property.image_url || `/media/${property.image}` // ✅ relativo también
                   }
                   alt={property.title}
                 />

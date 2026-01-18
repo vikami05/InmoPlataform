@@ -28,21 +28,21 @@ export default function Properties() {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
 
-  // Cargar datos desde backend al iniciar el componente
+  // 🚀 Cargar datos desde backend al iniciar el componente
   useEffect(() => {
     axios
-      .get("https://inmoplataform-backend.onrender.com/api/properties/", {
+      .get("/api/properties/", {
         withCredentials: true, // envía cookies (aunque no estrictamente necesario para GET público)
-        headers: { "X-CSRFToken": getCookie("csrftoken") }, // opcional para GET
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       .then((res) => {
         setProperties(res.data);
         setFilteredProperties(res.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error("❌ Error al obtener propiedades:", err));
   }, []);
 
-  // Filtrado de propiedades
+  // 🎯 Filtrado de propiedades
   const handleFilterChange = ({ location, type, rooms, maxPrice }) => {
     const filtered = properties.filter((prop) => {
       const matchLocation = location
@@ -54,7 +54,9 @@ export default function Properties() {
           ? prop.rooms >= 4
           : prop.rooms === Number(rooms)
         : true;
-      const matchPrice = maxPrice ? Number(prop.price) <= Number(maxPrice) : true;
+      const matchPrice = maxPrice
+        ? Number(prop.price) <= Number(maxPrice)
+        : true;
 
       return matchLocation && matchType && matchRooms && matchPrice;
     });
@@ -87,12 +89,12 @@ export default function Properties() {
           spacing={6}
           sx={{ maxWidth: "1400px", width: "100%", alignItems: "flex-start" }}
         >
-          {/* Filtros */}
+          {/* 🧩 Filtros */}
           <Grid item xs={12} md={3}>
             <Filters onFilterChange={handleFilterChange} />
           </Grid>
 
-          {/* Propiedades */}
+          {/* 🏠 Propiedades */}
           <Grid item xs={12} md={9}>
             {filteredProperties.length > 0 ? (
               <Grid

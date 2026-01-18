@@ -27,12 +27,12 @@ export default function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Verifica si ya hay sesión activa
+  // ✅ Verifica si ya hay sesión activa
   useEffect(() => {
     axios
-      .get("https://inmoplataform-backend.onrender.com/api/me/", {
+      .get("/api/me/", {
         withCredentials: true, // ⚡ envía cookies JWT
-        headers: { "X-CSRFToken": getCookie("csrftoken") }, // CSRF token opcional para GET
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
       })
       .then(() => navigate("/profile")) // Si hay cookie válida, va directo al perfil
       .catch(() => {}); // No logueado, no hacer nada
@@ -44,12 +44,12 @@ export default function Login() {
 
     try {
       await axios.post(
-        "https://inmoplataform-backend.onrender.com/api/login/",
+        "/api/login/",
         { email, password },
         {
           withCredentials: true, // ⚡ envía cookies JWT
           headers: {
-            "X-CSRFToken": getCookie("csrftoken"), // ⚡ CSRF requerido en POST
+            "X-CSRFToken": getCookie("csrftoken"),
             "Content-Type": "application/json",
           },
         }

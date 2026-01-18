@@ -57,12 +57,13 @@ class RegisterView(generics.CreateAPIView):
             "access_token": str(refresh.access_token)
         }, status=201)
 
+        # ⚙️ Cookie ajustada para Render (permite frontend-backend en distintos dominios)
         response.set_cookie(
             key="access_token",
             value=str(refresh.access_token),
             httponly=True,
-            secure=False,
-            samesite="Lax"
+            secure=False,      # mantener False mientras probás en Render
+            samesite="None"    # 👈 necesario para cross-site cookies
         )
         return response
 
@@ -83,12 +84,13 @@ def login_view(request):
             "success": True,
             "access_token": str(refresh.access_token)
         })
+        # ⚙️ Cookie ajustada para Render (permite frontend-backend en distintos dominios)
         response.set_cookie(
             key="access_token",
             value=str(refresh.access_token),
             httponly=True,
-            secure=False,
-            samesite="Lax"
+            secure=False,      # mantener False mientras probás en Render
+            samesite="None"    # 👈 necesario para cross-site cookies
         )
         return response
 
