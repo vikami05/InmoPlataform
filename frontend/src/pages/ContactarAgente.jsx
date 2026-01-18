@@ -4,6 +4,22 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Footer from "../components/Footer";
 
+// Función para leer cookie CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 const ContactarAgente = () => {
   const { propiedadId } = useParams();
   const navigate = useNavigate();
@@ -47,13 +63,17 @@ const ContactarAgente = () => {
           propiedad: propiedadId,
         },
         {
-          withCredentials: true, // ⚡ Muy importante para que se envíen cookies HttpOnly
+          withCredentials: true, // ⚡ envía cookies JWT HttpOnly
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"), // ⚡ CSRF requerido por Django
+            "Content-Type": "application/json",
+          },
         }
       );
 
       console.log("✅ Respuesta del servidor:", response.data);
-      setSuccess(true); 
-      setErrorMsg(""); 
+      setSuccess(true);
+      setErrorMsg("");
 
       // Limpiar campos del formulario
       setFormData({
@@ -73,7 +93,6 @@ const ContactarAgente = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Contenido principal */}
       <Box
         sx={{
           flexGrow: 1,
@@ -97,12 +116,7 @@ const ContactarAgente = () => {
         >
           <Typography
             variant="h5"
-            sx={{
-              mb: 3,
-              fontWeight: "bold",
-              textAlign: "center",
-              color: "#1E40AF",
-            }}
+            sx={{ mb: 3, fontWeight: "bold", textAlign: "center", color: "#1E40AF" }}
           >
             Contactar Agente
           </Typography>
@@ -185,13 +199,7 @@ const ContactarAgente = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                sx={{
-                  px: 4,
-                  py: 1,
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontSize: "1rem",
-                }}
+                sx={{ px: 4, py: 1, borderRadius: 2, textTransform: "none", fontSize: "1rem" }}
               >
                 Enviar mensaje
               </Button>
@@ -201,12 +209,7 @@ const ContactarAgente = () => {
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{
-              mt: 3,
-              textAlign: "center",
-              cursor: "pointer",
-              "&:hover": { textDecoration: "underline" },
-            }}
+            sx={{ mt: 3, textAlign: "center", cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
             onClick={() => navigate(-1)}
           >
             ← Volver a la propiedad
@@ -214,7 +217,6 @@ const ContactarAgente = () => {
         </Paper>
       </Box>
 
-      {/* Footer */}
       <Footer />
     </Box>
   );

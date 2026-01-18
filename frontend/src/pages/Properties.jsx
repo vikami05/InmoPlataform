@@ -8,15 +8,33 @@ import PropertyCard from "../components/PropertyCard";
 import Footer from "../components/Footer";
 import fondo3 from "../assets/fondo3.jpg";
 
+// Función para leer cookie CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 export default function Properties() {
-  // Estado para las propiedades
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
 
   // Cargar datos desde backend al iniciar el componente
   useEffect(() => {
     axios
-      .get("https://inmoplataform-backend.onrender.com/api/properties/") // backend online
+      .get("https://inmoplataform-backend.onrender.com/api/properties/", {
+        withCredentials: true, // envía cookies (aunque no estrictamente necesario para GET público)
+        headers: { "X-CSRFToken": getCookie("csrftoken") }, // opcional para GET
+      })
       .then((res) => {
         setProperties(res.data);
         setFilteredProperties(res.data);
@@ -36,9 +54,7 @@ export default function Properties() {
           ? prop.rooms >= 4
           : prop.rooms === Number(rooms)
         : true;
-      const matchPrice = maxPrice
-        ? Number(prop.price) <= Number(maxPrice)
-        : true;
+      const matchPrice = maxPrice ? Number(prop.price) <= Number(maxPrice) : true;
 
       return matchLocation && matchType && matchRooms && matchPrice;
     });

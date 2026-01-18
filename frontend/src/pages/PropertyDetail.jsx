@@ -59,6 +59,22 @@ const interiorImages = {
   "casa11.jpg": interior11,
 };
 
+// Función para leer cookie CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 export default function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -69,7 +85,10 @@ export default function PropertyDetail() {
   // 🚀 Traer propiedad
   useEffect(() => {
     axios
-      .get(`https://inmoplataform-backend.onrender.com/api/properties/${id}/`)
+      .get(`https://inmoplataform-backend.onrender.com/api/properties/${id}/`, {
+        withCredentials: true,
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      })
       .then((res) => setProperty(res.data))
       .catch((err) => console.log(err));
   }, [id]);
@@ -80,13 +99,13 @@ export default function PropertyDetail() {
       try {
         const userRes = await axios.get(
           "https://inmoplataform-backend.onrender.com/api/me/",
-          { withCredentials: true }
+          { withCredentials: true, headers: { "X-CSRFToken": getCookie("csrftoken") } }
         );
         setUser(userRes.data);
 
         const favRes = await axios.get(
           "https://inmoplataform-backend.onrender.com/api/favorites/",
-          { withCredentials: true }
+          { withCredentials: true, headers: { "X-CSRFToken": getCookie("csrftoken") } }
         );
         const favIds = favRes.data.map((f) => f.property.id);
         setIsFavorite(favIds.includes(Number(id)));
@@ -121,7 +140,10 @@ export default function PropertyDetail() {
       const res = await axios.post(
         `https://inmoplataform-backend.onrender.com/api/favorites/${id}/toggle/`,
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        }
       );
 
       if (res.data.status === "added") {
@@ -135,7 +157,6 @@ export default function PropertyDetail() {
     }
   };
 
-  // 👉 Redirigir al formulario de contacto
   const irAContactarAgente = () => {
     navigate(`/contactar-agente/${id}`);
   };

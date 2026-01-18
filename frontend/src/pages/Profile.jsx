@@ -12,6 +12,22 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// Función para leer cookie CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [favorites, setFavorites] = useState([]);
@@ -24,14 +40,20 @@ export default function Profile() {
         // 1️⃣ Traer perfil del usuario logueado
         const userRes = await axios.get(
           "https://inmoplataform-backend.onrender.com/api/me/",
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+          }
         );
         setUser(userRes.data);
 
         // 2️⃣ Traer favoritos del usuario
         const favRes = await axios.get(
           "https://inmoplataform-backend.onrender.com/api/favorites/",
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+          }
         );
         const favProperties = favRes.data.map((fav) => fav.property);
         setFavorites(favProperties);
@@ -66,7 +88,10 @@ export default function Profile() {
       await axios.post(
         "https://inmoplataform-backend.onrender.com/api/logout/",
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        }
       );
       navigate("/login");
     } catch (err) {

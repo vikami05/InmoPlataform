@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # ------------------------------
 # BASE
@@ -105,7 +106,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ------------------------------
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "https://inmoplataform-frontend.onrender.com",  # frontend en Render
+    "https://inmoplataform-frontend.onrender.com",
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",
@@ -122,10 +123,10 @@ CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 # ------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'core.authentication.JWTAuthenticationFromCookie',  # acepta JWT desde cookies
+        'core.authentication.JWTAuthenticationFromCookie',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # login/registro abiertos
+        'rest_framework.permissions.AllowAny',
     ),
 }
 
@@ -136,18 +137,20 @@ SIMPLE_JWT = {
 }
 
 # ------------------------------
-# CSRF
+# CSRF y cookies
 # ------------------------------
 CSRF_TRUSTED_ORIGINS = [
     "https://inmoplataform-frontend.onrender.com",
 ]
-CSRF_COOKIE_SECURE = True  # solo HTTPS
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True       # cookies solo HTTPS
+CSRF_COOKIE_HTTPONLY = False    # frontend necesita acceder al token
+SESSION_COOKIE_SECURE = True    # cookies solo HTTPS
 
 # ------------------------------
 # SEGURIDAD ADICIONAL
 # ------------------------------
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = True       # solo si Render maneja HTTPS
 X_FRAME_OPTIONS = "DENY"
+APPEND_SLASH = True
