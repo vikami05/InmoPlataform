@@ -70,7 +70,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # ------------------------------
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # ⚠️ cambiar a PostgreSQL si crece
+        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
@@ -137,20 +137,25 @@ SIMPLE_JWT = {
 }
 
 # ------------------------------
-# CSRF y cookies
+# CSRF y cookies (temporal para Render)
 # ------------------------------
 CSRF_TRUSTED_ORIGINS = [
     "https://inmoplataform-frontend.onrender.com",
 ]
-CSRF_COOKIE_SECURE = True       # cookies solo HTTPS
-CSRF_COOKIE_HTTPONLY = False    # frontend necesita acceder al token
-SESSION_COOKIE_SECURE = True    # cookies solo HTTPS
+CSRF_COOKIE_SECURE = False       # ❌ No solo HTTPS
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SECURE = False    # ❌ No solo HTTPS
 
 # ------------------------------
 # SEGURIDAD ADICIONAL
 # ------------------------------
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = True       # solo si Render maneja HTTPS
+SECURE_SSL_REDIRECT = False      # ❌ Desactivado temporalmente
 X_FRAME_OPTIONS = "DENY"
 APPEND_SLASH = True
+
+# ------------------------------
+# Proxy SSL (mantener por si hay HTTPS en Render)
+# ------------------------------
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
