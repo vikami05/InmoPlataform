@@ -3,6 +3,7 @@
 Desarrollé una web de gestión inmobiliaria donde los visitantes pueden explorar propiedades y los clientes registrados pueden guardar favoritas, contactar agentes y gestionar su perfil.
 
 🚀 Funcionalidades Principales
+
 👥 Roles
 
 🧑‍💼 Visitante (sin cuenta)
@@ -29,6 +30,8 @@ Gestionar información básica de su perfil.
 
 
 🧩 Arquitectura y Tecnologías
+
+
 🔹 Backend
 
 Django + Django REST Framework (DRF)
@@ -48,6 +51,8 @@ Endpoint REST /api/chat/ para recibir y responder mensajes.
 Responde sobre agentes y propiedades registrados.
 
 Ejemplo de integración simple con IA.
+
+
 
 🔹 Frontend
 
