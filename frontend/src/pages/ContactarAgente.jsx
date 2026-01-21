@@ -4,25 +4,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Footer from "../components/Footer";
 
-// Función para leer cookie CSRF
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name + "=")) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
 const ContactarAgente = () => {
   const { propiedadId } = useParams();
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("access_token");
+  const BASE_URL = "http://localhost:8000/api"; // 🔹 URL correcta del backend
 
   const [agentes, setAgentes] = useState([]);
   const [formData, setFormData] = useState({
@@ -35,14 +22,32 @@ const ContactarAgente = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // 🔹 Simulación de agentes (puede venir luego del backend)
+    // 🔹 Simulación de agentes (luego se puede traer del backend)
     const agentesMock = [
       { id: 1, nombre: "María López" },
       { id: 2, nombre: "Juan Pérez" },
       { id: 3, nombre: "Lucía Fernández" },
     ];
     setAgentes(agentesMock);
-  }, []);
+
+    // 🔹 Autocompletar datos si el usuario está logueado
+    if (token) {
+      axios
+        .get(`${BASE_URL}/me/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          setFormData((prev) => ({
+            ...prev,
+            nombre: res.data.profile?.nombre || "",
+            email: res.data.email || "",
+          }));
+        })
+        .catch(() => {
+          // Si no se puede obtener info, no hacer nada
+        });
+    }
+  }, [token]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -52,9 +57,11 @@ const ContactarAgente = () => {
     e.preventDefault();
 
     try {
-      // 🚀 Enviar consulta al backend Django
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const response = await axios.post(
-        "/api/consultas/",
+        `${BASE_URL}/consultas/`, // ✅ URL correcta con /api
         {
           nombre: formData.nombre,
           email: formData.email,
@@ -62,13 +69,7 @@ const ContactarAgente = () => {
           agente: formData.agenteId,
           propiedad: propiedadId,
         },
-        {
-          withCredentials: true, // ⚡ importante para enviar cookies HttpOnly
-          headers: {
-            "X-CSRFToken": getCookie("csrftoken"), // ⚡ requerido por Django
-            "Content-Type": "application/json",
-          },
-        }
+        { headers }
       );
 
       console.log("✅ Respuesta del servidor:", response.data);
@@ -77,8 +78,8 @@ const ContactarAgente = () => {
 
       // Limpiar campos del formulario
       setFormData({
-        nombre: "",
-        email: "",
+        nombre: token ? formData.nombre : "",
+        email: token ? formData.email : "",
         mensaje: "",
         agenteId: "",
       });
@@ -123,20 +124,12 @@ const ContactarAgente = () => {
 
           {/* Mensajes de estado */}
           {success && (
-            <Alert
-              severity="success"
-              sx={{ mb: 2, textAlign: "center" }}
-              onClose={() => setSuccess(false)}
-            >
+            <Alert severity="success" sx={{ mb: 2, textAlign: "center" }} onClose={() => setSuccess(false)}>
               ✅ ¡Tu mensaje ha sido enviado al agente seleccionado!
             </Alert>
           )}
           {errorMsg && (
-            <Alert
-              severity="error"
-              sx={{ mb: 2, textAlign: "center" }}
-              onClose={() => setErrorMsg("")}
-            >
+            <Alert severity="error" sx={{ mb: 2, textAlign: "center" }} onClose={() => setErrorMsg("")}>
               {errorMsg}
             </Alert>
           )}
@@ -199,13 +192,7 @@ const ContactarAgente = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                sx={{
-                  px: 4,
-                  py: 1,
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontSize: "1rem",
-                }}
+                sx={{ px: 4, py: 1, borderRadius: 2, textTransform: "none", fontSize: "1rem" }}
               >
                 Enviar mensaje
               </Button>
@@ -215,12 +202,7 @@ const ContactarAgente = () => {
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{
-              mt: 3,
-              textAlign: "center",
-              cursor: "pointer",
-              "&:hover": { textDecoration: "underline" },
-            }}
+            sx={{ mt: 3, textAlign: "center", cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
             onClick={() => navigate(-1)}
           >
             ← Volver a la propiedad

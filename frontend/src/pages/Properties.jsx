@@ -1,52 +1,43 @@
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, CircularProgress } from "@mui/material";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-import Navbar from "../components/Navbar";
 import Filters from "../components/Filters";
 import PropertyCard from "../components/PropertyCard";
 import Footer from "../components/Footer";
 import fondo3 from "../assets/fondo3.jpg";
 
-// Función para leer cookie CSRF
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name + "=")) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
 export default function Properties() {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 🚀 Cargar datos desde backend al iniciar el componente
+  const token = localStorage.getItem("access_token");
+
+  // 🚀 Cargar propiedades al montar
   useEffect(() => {
+    setLoading(true);
     axios
-      .get("/api/properties/", {
-        withCredentials: true, // envía cookies (aunque no estrictamente necesario para GET público)
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      .get("http://localhost:8000/api/properties/", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       .then((res) => {
         setProperties(res.data);
         setFilteredProperties(res.data);
       })
-      .catch((err) => console.error("❌ Error al obtener propiedades:", err));
-  }, []);
+      .catch((err) => {
+        console.error("❌ Error al obtener propiedades:", err);
+        setError("No se pudieron cargar las propiedades.");
+      })
+      .finally(() => setLoading(false));
+  }, [token]);
 
   // 🎯 Filtrado de propiedades
   const handleFilterChange = ({ location, type, rooms, maxPrice }) => {
     const filtered = properties.filter((prop) => {
       const matchLocation = location
-        ? prop.location.toLowerCase().includes(location.toLowerCase())
+        ? prop.location?.toLowerCase().includes(location.toLowerCase())
         : true;
       const matchType = type ? prop.type === type : true;
       const matchRooms = rooms
@@ -72,14 +63,16 @@ export default function Properties() {
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <Navbar bgColor="#fff" textColor="#1F2937" />
-
+      {/* 📦 Contenido principal */}
       <Box
         sx={{
           px: { xs: 2, md: 6 },
           py: { xs: 6, md: 10 },
+          flexGrow: 1,
           display: "flex",
           justifyContent: "center",
         }}
@@ -96,7 +89,32 @@ export default function Properties() {
 
           {/* 🏠 Propiedades */}
           <Grid item xs={12} md={9}>
-            {filteredProperties.length > 0 ? (
+            {loading ? (
+              <Box
+                sx={{
+                  minHeight: 300,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <CircularProgress color="primary" />
+              </Box>
+            ) : error ? (
+              <Box
+                sx={{
+                  minHeight: 300,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  borderRadius: 2,
+                  p: 4,
+                }}
+              >
+                <Typography color="error">{error}</Typography>
+              </Box>
+            ) : filteredProperties.length > 0 ? (
               <Grid
                 container
                 spacing={4}
@@ -138,6 +156,7 @@ export default function Properties() {
         </Grid>
       </Box>
 
+      {/* 📍 Footer */}
       <Footer />
     </Box>
   );

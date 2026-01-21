@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Container, Box, TextField, Button, Typography, Paper } from "@mui/material";
+import {
+  Container,
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Paper,
+} from "@mui/material";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
-
-// Función para leer cookies (necesario para CSRF)
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name + "=")) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -27,39 +18,48 @@ export default function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // ✅ Verifica si ya hay sesión activa
-  useEffect(() => {
-    axios
-      .get("/api/me/", {
-        withCredentials: true, // ⚡ envía cookies JWT
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
-      })
-      .then(() => navigate("/profile")) // Si hay cookie válida, va directo al perfil
-      .catch(() => {}); // No logueado, no hacer nada
-  }, [navigate]);
+  const token = localStorage.getItem("access_token");
 
+  // ✅ Verificar si ya hay sesión activa
+  useEffect(() => {
+    if (!token) return;
+
+    axios
+      .get("http://localhost:8000/api/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => navigate("/profile")) // Si hay token válido, redirige al perfil
+      .catch(() => {
+        // Token inválido → no hacer nada
+      });
+  }, [navigate, token]);
+
+  // 🚀 Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      await axios.post(
-        "/api/login/",
+      const res = await axios.post(
+        "http://localhost:8000/api/login/",
         { email, password },
-        {
-          withCredentials: true, // ⚡ envía cookies JWT
-          headers: {
-            "X-CSRFToken": getCookie("csrftoken"),
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
 
-      // Login exitoso: redirigir a perfil
+      // Guardar token en localStorage
+      const accessToken = res.data.access_token;
+      localStorage.setItem("access_token", accessToken);
+
+      // 🔔 Notificar al Navbar que el token cambió
+      window.dispatchEvent(new Event("tokenChanged"));
+
+      // Redirigir a perfil
       navigate("/profile");
     } catch (err) {
-      console.error(err);
-      setError("Email o contraseña incorrectos o no se pudo conectar al servidor");
+      console.error("❌ Error al iniciar sesión:", err);
+      setError(
+        "Email o contraseña incorrectos o no se pudo conectar al servidor."
+      );
     }
   };
 

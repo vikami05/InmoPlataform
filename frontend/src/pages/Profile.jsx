@@ -12,55 +12,83 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-// Función para leer cookie CSRF
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name + "=")) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [favorites, setFavorites] = useState([]);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // 🚀 Al montar, cargar perfil y favoritos
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 1️⃣ Traer perfil del usuario logueado
-        const userRes = await axios.get("/api/me/", {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
-        });
-        setUser(userRes.data);
+  const token = localStorage.getItem("access_token");
 
-        // 2️⃣ Traer favoritos del usuario
-        const favRes = await axios.get("/api/favorites/", {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
-        });
-        const favProperties = favRes.data.map((fav) => fav.property);
-        setFavorites(favProperties);
-      } catch (err) {
-        alert("⚠️ Debes iniciar sesión para acceder a tu perfil.");
-        navigate("/login");
-      }
-    };
+  // 🚀 Función para cargar datos del perfil y favoritos
+  const fetchData = async () => {
+    try {
+      console.log("📡 Cargando perfil y favoritos...");
+      // 1️⃣ Perfil
+      const userRes = await axios.get("http://localhost:8000/api/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(userRes.data);
+
+      // 2️⃣ Favoritos
+      const favRes = await axios.get("http://localhost:8000/api/favorites/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("💖 Favoritos recibidos:", favRes.data);
+
+      const favProperties = favRes.data.map((fav) => fav.property);
+      setFavorites(favProperties);
+    } catch (err) {
+      console.error("❌ Error al cargar perfil o favoritos:", err);
+      setError("Debes iniciar sesión para acceder a tu perfil.");
+      navigate("/login");
+    }
+  };
+
+  // 🚀 Cargar perfil y favoritos + escuchar cambios globales
+  useEffect(() => {
+    if (!token) {
+      setError("Debes iniciar sesión para acceder a tu perfil.");
+      navigate("/login");
+      return;
+    }
 
     fetchData();
-  }, [navigate]);
 
-  // ⏳ Mientras carga
+    // 👂 Escuchar evento global "favoritesChanged"
+    const handleFavoritesChanged = () => {
+      console.log("🔁 Evento favoritesChanged detectado, recargando...");
+      fetchData();
+    };
+
+    window.addEventListener("favoritesChanged", handleFavoritesChanged);
+
+    // Limpieza al desmontar
+    return () => {
+      window.removeEventListener("favoritesChanged", handleFavoritesChanged);
+    };
+  }, []); // solo una vez al montar
+
+  // 🔓 Cerrar sesión
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    window.dispatchEvent(new Event("tokenChanged")); // notificar al Navbar
+    navigate("/login");
+  };
+
+  // ⏳ Estados de carga o error
+  if (error) {
+    return (
+      <Typography
+        variant="h6"
+        sx={{ mt: 10, textAlign: "center", color: "error.main" }}
+      >
+        {error}
+      </Typography>
+    );
+  }
+
   if (!user) {
     return (
       <Typography
@@ -75,23 +103,6 @@ export default function Profile() {
   const nombre = user.profile?.nombre || "Usuario";
   const apellido = user.profile?.apellido || "";
   const email = user.email || "sin-email";
-
-  // 🔓 Cerrar sesión
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "/api/logout/",
-        {},
-        {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
-        }
-      );
-      navigate("/login");
-    } catch (err) {
-      console.error("Error logout:", err);
-    }
-  };
 
   return (
     <Box
@@ -170,7 +181,13 @@ export default function Profile() {
                   component="img"
                   height="180"
                   image={
-                    property.image_url || `/media/${property.image}` // ✅ relativo también
+                    property.image_url
+                      ? property.image_url
+                      : property.image
+                      ? property.image.startsWith("http")
+                        ? property.image
+                        : `http://localhost:8000${property.image}`
+                      : "/placeholder.jpg"
                   }
                   alt={property.title}
                 />
@@ -183,7 +200,7 @@ export default function Profile() {
                     color="text.secondary"
                     sx={{ mb: 2 }}
                   >
-                    ${property.price.toLocaleString()}
+                    ${property.price?.toLocaleString()}
                   </Typography>
                   <Button
                     variant="contained"

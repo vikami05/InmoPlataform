@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, Typography, Box, IconButton, Button, Avatar } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  IconButton,
+  Button,
+  Avatar,
+} from "@mui/material";
 import { AccountCircle } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -10,25 +18,41 @@ export default function Navbar({ bgColor = "transparent" }) {
   const [user, setUser] = useState(null);
 
   const textColor = location.pathname === "/" ? "white" : "black";
-  const hoverBg = location.pathname === "/" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)";
+  const hoverBg =
+    location.pathname === "/"
+      ? "rgba(255,255,255,0.1)"
+      : "rgba(0,0,0,0.05)";
 
-  // 🔁 Verificar sesión actual
+  // 🔁 Cargar usuario al montar y escuchar cambios del token
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/me/", { withCredentials: true })
-      .then((res) => setUser(res.data))
-      .catch(() => setUser(null));
-  }, [location.pathname]);
+    const loadUser = () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setUser(null);
+        return;
+      }
+
+      axios
+        .get("http://localhost:8000/api/me/", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => setUser(res.data))
+        .catch(() => setUser(null));
+    };
+
+    // Escucha evento de cambios en el token (login/logout)
+    window.addEventListener("tokenChanged", loadUser);
+    loadUser(); // ejecuta al montar
+
+    return () => window.removeEventListener("tokenChanged", loadUser);
+  }, []);
 
   // 🚪 Cerrar sesión
-  const handleLogout = async () => {
-    try {
-      await axios.post("http://localhost:8000/api/logout/", {}, { withCredentials: true });
-      setUser(null);
-      navigate("/login");
-    } catch (err) {
-      console.error("Error logout:", err);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    window.dispatchEvent(new Event("tokenChanged")); // 🔔 notifica al Navbar
+    setUser(null);
+    navigate("/login");
   };
 
   return (
@@ -46,7 +70,11 @@ export default function Navbar({ bgColor = "transparent" }) {
           variant="h6"
           component={Link}
           to="/"
-          sx={{ fontWeight: "bold", color: textColor, textDecoration: "none" }}
+          sx={{
+            fontWeight: "bold",
+            color: textColor,
+            textDecoration: "none",
+          }}
         >
           InmoPlatform
         </Typography>
@@ -73,31 +101,31 @@ export default function Navbar({ bgColor = "transparent" }) {
           })}
 
           {/* 👤 Usuario / Login */}
-          {location.pathname === "/" ? (
-            // 🟢 En Home: mostrar siempre el muñequito (link a perfil o login)
-            <IconButton
-              component={Link}
-              to={user ? "/profile" : "/login"}
-              sx={{
-                color: textColor,
-                bgcolor: "transparent",
-                "&:hover": { bgcolor: hoverBg },
-                borderRadius: "50%",
-              }}
-            >
-              <AccountCircle fontSize="large" />
-            </IconButton>
-          ) : user ? (
-            // 🟢 En otras páginas: mostrar usuario y cerrar sesión
+          {user ? (
+            // 🟢 Usuario logueado: Avatar + nombre clickeables + botón Logout
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {user.profile?.photo ? (
-                <Avatar src={user.profile.photo} alt={user.name} />
-              ) : (
-                <AccountCircle fontSize="large" sx={{ color: textColor }} />
-              )}
-              <Typography sx={{ color: textColor }}>
-                {user.name || user.nombre || user.username || user.email}
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  "&:hover": { opacity: 0.8 },
+                }}
+                onClick={() => navigate("/profile")} // 👈 lleva al perfil
+              >
+                {user.profile?.photo ? (
+                  <Avatar src={user.profile.photo} alt={user.name} />
+                ) : (
+                  <AccountCircle
+                    fontSize="large"
+                    sx={{ color: textColor }}
+                  />
+                )}
+                <Typography sx={{ color: textColor, ml: 1 }}>
+                  {user.name || user.username || user.email}
+                </Typography>
+              </Box>
+
               <Button
                 onClick={handleLogout}
                 sx={{
@@ -110,7 +138,7 @@ export default function Navbar({ bgColor = "transparent" }) {
               </Button>
             </Box>
           ) : (
-            // 🔵 Usuario no logueado: muñequito que lleva a login
+            // 🔵 Usuario no logueado
             <IconButton
               component={Link}
               to="/login"

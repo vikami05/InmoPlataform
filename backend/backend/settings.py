@@ -1,21 +1,29 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
 
-# ------------------------------
+
+# Carga las variables del archivo .env
+load_dotenv()
+
+# Ahora se puede acceder a la API key así:
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# -----------------------------
 # BASE
-# ------------------------------
+# -----------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-@l5ndi*exm4_4zy)1&)3n!z=2ceu+(px+5thk(yazzm*m-iy%%'
-DEBUG = False
-ALLOWED_HOSTS = ["inmoplataform-backend.onrender.com"]
+DEBUG = True  # Siempre True en local
 
-# ------------------------------
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+# -----------------------------
 # APPS
-# ------------------------------
+# -----------------------------
 INSTALLED_APPS = [
-    # Django default
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,31 +31,34 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # externas
-    "corsheaders",
     'rest_framework',
-    'rest_framework.authtoken',
+    'corsheaders',
 
-    # app local
     'core',
 ]
 
-# ------------------------------
+# -----------------------------
 # MIDDLEWARE
-# ------------------------------
+# -----------------------------
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # siempre arriba de CommonMiddleware
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",  # 🚀 Debe ir arriba
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# -----------------------------
+# URLS
+# -----------------------------
 ROOT_URLCONF = 'backend.urls'
 
+# -----------------------------
+# TEMPLATES
+# -----------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -55,6 +66,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -65,9 +77,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# ------------------------------
-# DATABASE
-# ------------------------------
+# -----------------------------
+# BASE DE DATOS
+# -----------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -75,87 +87,65 @@ DATABASES = {
     }
 }
 
-# ------------------------------
-# PASSWORD VALIDATORS
-# ------------------------------
+# -----------------------------
+# VALIDADORES DE CONTRASEÑA
+# -----------------------------
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ------------------------------
-# INTERNATIONALIZATION
-# ------------------------------
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+# -----------------------------
+# INTERNACIONALIZACIÓN
+# -----------------------------
+LANGUAGE_CODE = 'es-ar'
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 USE_I18N = True
 USE_TZ = True
 
-# ------------------------------
-# STATIC FILES
-# ------------------------------
+# -----------------------------
+# ESTÁTICOS Y MEDIA
+# -----------------------------
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ------------------------------
-# CORS
-# ------------------------------
-CORS_ALLOW_CREDENTIALS = True
+# -----------------------------
+# CORS (para React local)
+# -----------------------------
 CORS_ALLOWED_ORIGINS = [
-    "https://inmoplataform-frontend.onrender.com",
+    "http://localhost:5173",  # ⚡ tu frontend
 ]
-CORS_ALLOW_HEADERS = [
-    "content-type",
-    "authorization",
-    "accept",
-    "origin",
-    "x-csrftoken",
-    "x-requested-with",
-]
-CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+CORS_ALLOW_CREDENTIALS = True
 
-# ------------------------------
-# REST FRAMEWORK + JWT
-# ------------------------------
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+# -----------------------------
+# REST FRAMEWORK
+# -----------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'core.authentication.JWTAuthenticationFromCookie',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.AllowAny',  # ⚡ Cambiar a IsAuthenticated si quieres proteger todo
     ),
 }
 
+# -----------------------------
+# JWT
+# -----------------------------
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# ------------------------------
-# CSRF y cookies (temporal para Render)
-# ------------------------------
-CSRF_TRUSTED_ORIGINS = [
-    "https://inmoplataform-frontend.onrender.com",
-]
-CSRF_COOKIE_SECURE = False       # ❌ No solo HTTPS
-CSRF_COOKIE_HTTPONLY = False
-SESSION_COOKIE_SECURE = False    # ❌ No solo HTTPS
-
-# ------------------------------
-# SEGURIDAD ADICIONAL
-# ------------------------------
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = False      # ❌ Desactivado temporalmente
-X_FRAME_OPTIONS = "DENY"
-APPEND_SLASH = True
-
-# ------------------------------
-# Proxy SSL (mantener por si hay HTTPS en Render)
-# ------------------------------
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# -----------------------------
+# DEFAULT AUTO FIELD
+# -----------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

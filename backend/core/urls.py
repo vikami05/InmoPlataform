@@ -1,28 +1,25 @@
 from django.urls import path
 from . import views
-from .views import RegisterView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import crear_consulta
+from .views import RegisterView, crear_consulta
 
 urlpatterns = [
-    # 🏡 Endpoints de propiedades
+    # 🏡 Propiedades
     path('properties/', views.properties_list, name='properties-list'),
     path('properties/<int:pk>/', views.property_detail, name='property-detail'),
 
-    # 👤 Registro y login
+    # 👤 Autenticación
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('me/', views.me_view, name='me'),
 
     # 💖 Favoritos
-    path('favorites/', views.list_favorites, name='list_favorites'),
-    path('favorites/<int:property_id>/toggle/', views.toggle_favorite, name='toggle_favorite'),
+    path('add_favorite/<int:property_id>/', views.add_favorite, name='add_favorite'),  # ✅ Igual al test
+    path('favorites/', views.list_favorites, name='list_favorites'),  # GET lista
 
-    # 🔑 JWT
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
-    # ✉️ Consultas (sin repetir el prefijo "api/")
+    # ✉️ Consultas
     path('consultas/', crear_consulta, name='crear_consulta'),
+
+    # 🔹 Nueva ruta del mini chat
+    path('chat/', views.chat_with_agent, name='chat_with_agent'),
 ]

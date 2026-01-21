@@ -59,22 +59,6 @@ const interiorImages = {
   "casa11.jpg": interior11,
 };
 
-// Función para leer cookie CSRF
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name + "=")) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
 export default function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,40 +66,41 @@ export default function PropertyDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState(null);
 
+  const token = localStorage.getItem("access_token");
+
   // 🚀 Traer propiedad
   useEffect(() => {
     axios
-      .get(`/api/properties/${id}/`, {
-        withCredentials: true,
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
-      })
+      .get(`http://localhost:8000/api/properties/${id}/`)
       .then((res) => setProperty(res.data))
       .catch((err) => console.error("❌ Error al obtener propiedad:", err));
   }, [id]);
 
-  // 🚀 Traer usuario logueado y favoritos
+  // 🚀 Traer usuario y favoritos
   useEffect(() => {
+    if (!token) return;
+
     const fetchUserAndFavorites = async () => {
       try {
-        const userRes = await axios.get("/api/me/", {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        const userRes = await axios.get("http://localhost:8000/api/me/", {
+          headers: { Authorization: `Bearer ${token}` },
         });
         setUser(userRes.data);
 
-        const favRes = await axios.get("/api/favorites/", {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        const favRes = await axios.get("http://localhost:8000/api/favorites/", {
+          headers: { Authorization: `Bearer ${token}` },
         });
+
         const favIds = favRes.data.map((f) => f.property.id);
         setIsFavorite(favIds.includes(Number(id)));
-      } catch {
-        setUser(null); // no logueado
+      } catch (err) {
+        console.error("❌ Error al traer usuario/favoritos:", err);
+        setUser(null);
       }
     };
 
     fetchUserAndFavorites();
-  }, [id]);
+  }, [id, token]);
 
   if (!property) {
     return (
@@ -129,7 +114,7 @@ export default function PropertyDetail() {
   const mainImage = mainImages[fileName] || mainImages["casa1.jpg"];
   const secondaryImage = interiorImages[fileName] || interior1;
 
-  // 🔄 Agregar / quitar favorito
+  // ❤️ Alternar favorito (agregar o quitar)
   const toggleFavorite = async () => {
     if (!user) {
       alert("Debes registrarte o iniciar sesión para guardar esta propiedad ⭐");
@@ -138,22 +123,25 @@ export default function PropertyDetail() {
 
     try {
       const res = await axios.post(
-        `/api/favorites/${id}/toggle/`,
+        `http://localhost:8000/api/add_favorite/${id}/`,
         {},
-        {
-          withCredentials: true,
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (res.data.status === "added") {
+      // 🧩 Interpretar respuesta del backend (added / removed)
+      if (res.data.action === "added") {
         setIsFavorite(true);
-      } else if (res.data.status === "removed") {
+        console.log("✅ Propiedad agregada a favoritos");
+      } else if (res.data.action === "removed") {
         setIsFavorite(false);
+        console.log("💔 Propiedad eliminada de favoritos");
       }
+
+      // 🔔 Notificar al perfil
+      window.dispatchEvent(new Event("favoritesChanged"));
     } catch (err) {
-      console.error("❌ Error favoritos:", err);
-      alert("⚠️ Error al actualizar favoritos");
+      console.error("❌ Error al alternar favorito:", err);
+      alert("⚠️ No se pudo actualizar el estado del favorito.");
     }
   };
 
@@ -173,7 +161,12 @@ export default function PropertyDetail() {
                 component="img"
                 image={img}
                 alt={`Foto ${index + 1}`}
-                sx={{ width: "100%", height: 300, objectFit: "cover", borderRadius: 2 }}
+                sx={{
+                  width: "100%",
+                  height: 300,
+                  objectFit: "cover",
+                  borderRadius: 2,
+                }}
               />
             </Grid>
           ))}
@@ -185,8 +178,11 @@ export default function PropertyDetail() {
             <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
               {property.location} • {property.type} • {property.rooms} hab.
             </Typography>
-            <Typography variant="h5" sx={{ color: "#1E40AF", fontWeight: "bold", mb: 2 }}>
-              ${property.price.toLocaleString()}
+            <Typography
+              variant="h5"
+              sx={{ color: "#1E40AF", fontWeight: "bold", mb: 2 }}
+            >
+              ${property.price?.toLocaleString()}
             </Typography>
 
             <Typography variant="body1" sx={{ mb: 4 }}>
@@ -202,7 +198,11 @@ export default function PropertyDetail() {
                 {isFavorite ? "❤️ En favoritos" : "Agregar a favoritos"}
               </Button>
 
-              <Button variant="contained" color="primary" onClick={irAContactarAgente}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={irAContactarAgente}
+              >
                 Contactar agente
               </Button>
             </Box>

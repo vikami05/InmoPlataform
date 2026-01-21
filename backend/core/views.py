@@ -4,9 +4,97 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, status
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt  # 👈 Import necesario
 from rest_framework_simplejwt.tokens import RefreshToken
+import unicodedata
+import random
+
+# 🔹 Importaciones nuevas para chatbot
+import openai
+from django.conf import settings
+
+# 🔹 Configurar la clave de OpenAI
+openai.api_key = settings.OPENAI_API_KEY
+
+# 🔹 Datos simulados
+AGENTES = ["María López", "Juan Pérez", "Lucía Fernández"]
+PROPIEDADES = [
+    "Casa moderna en Palermo",
+    "Casa Rústica",
+    "Casa con patio en Caballito",
+    "Loft moderno en Belgrano",
+    "Casa estilo clásico en San Isidro",
+]
+SALUDOS = ["hola", "buenos días", "buenas tardes", "buenas noches", "hi", "hello"]
+
+@api_view(["POST"])
+def chat_with_agent(request):
+    user_msg = request.data.get("message", "").lower()
+    response_text = "Lo siento, no entendí tu consulta."
+
+    # 🔹 Saludos
+    if any(saludo in user_msg for saludo in SALUDOS):
+        response_text = "¡Hola! Soy el asistente de InmoPlataform. ¿En qué puedo ayudarte?"
+        return Response({"reply": response_text})
+
+    # 🔹 Mención de un agente
+    for agente in AGENTES:
+        if agente.lower() in user_msg:
+            response_text = f"{agente} está disponible para responderte."
+            return Response({"reply": response_text})
+
+    # 🔹 Mención de una propiedad específica
+    for prop in PROPIEDADES:
+        if prop.lower() in user_msg:
+            # Asignamos un agente al azar
+            agente_asignado = random.choice(AGENTES)
+            response_text = (
+                f"Esta propiedad ({prop}) es una excelente opción!\n"
+                f"Te recomiendo contactar a {agente_asignado} para más info."
+            )
+            return Response({"reply": response_text})
+
+    # 🔹 Mensaje genérico que habla de propiedad
+    if "propiedad" in user_msg:
+        agente_asignado = random.choice(AGENTES)
+        response_text = f"Perfecto! Te recomiendo contactar a {agente_asignado} para ayudarte con las propiedades."
+        return Response({"reply": response_text})
+
+    # 🔹 Respuesta por defecto
+    return Response({"reply": response_text})
+
+
+SALUDOS = ["hola", "buenos días", "buenas tardes", "buenas noches", "hi", "hello"]
+
+@api_view(["POST"])
+def chat_with_agent(request):
+    user_msg = request.data.get("message", "").lower()
+    response_text = "Lo siento, no entendí tu consulta."
+
+    # 🔹 Saludos
+    for saludo in SALUDOS:
+        if saludo in user_msg:
+            response_text = "¡Hola! Soy el asistente de InmoPlataform. ¿En qué puedo ayudarte?"
+            break
+
+    # 🔹 Revisar agentes
+    if response_text.startswith("Lo siento"):
+        for agente in AGENTES:
+            if agente.lower() in user_msg:
+                response_text = f"{agente} está disponible para responderte."
+                break
+
+    # 🔹 Revisar propiedades
+    if response_text.startswith("Lo siento"):
+        for prop in PROPIEDADES:
+            if prop.lower() in user_msg:
+                response_text = f"Esta propiedad ({prop}) es una excelente opción! Contáctanos para más info."
+                break
+
+    return Response({"reply": response_text})
+
+
+
+
 
 from .models import Property, Favorite
 from .serializers import (
@@ -16,13 +104,11 @@ from .serializers import (
     ConsultaSerializer,
 )
 
-
 # -----------------------------------
 # Propiedades
 # -----------------------------------
 @api_view(['GET'])
 def properties_list(request):
-    """Listar todas las propiedades"""
     properties = Property.objects.all()
     serializer = PropertySerializer(properties, many=True)
     return Response(serializer.data)
@@ -30,14 +116,13 @@ def properties_list(request):
 
 @api_view(['GET'])
 def property_detail(request, pk):
-    """Detalle de una propiedad"""
     property_obj = get_object_or_404(Property, pk=pk)
     serializer = PropertySerializer(property_obj)
     return Response(serializer.data)
 
 
 # -----------------------------------
-# Registro de usuario + login automático
+# Registro de usuario
 # -----------------------------------
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -48,24 +133,11 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generar JWT
         refresh = RefreshToken.for_user(user)
-
-        # Respuesta JSON + cookie
-        response = Response({
+        return Response({
             "success": True,
             "access_token": str(refresh.access_token)
-        }, status=201)
-
-        # ⚙️ Cookie ajustada para Render (permite frontend-backend en distintos dominios)
-        response.set_cookie(
-            key="access_token",
-            value=str(refresh.access_token),
-            httponly=True,
-            secure=False,      # mantener False mientras probás en Render
-            samesite="None"    # 👈 necesario para cross-site cookies
-        )
-        return response
+        }, status=status.HTTP_201_CREATED)
 
 
 # -----------------------------------
@@ -73,28 +145,16 @@ class RegisterView(generics.CreateAPIView):
 # -----------------------------------
 @api_view(['POST'])
 def login_view(request):
-    """Login por email: devuelve token en JSON y cookie"""
     email = request.data.get('email')
     password = request.data.get('password')
-
     user = User.objects.filter(email=email).first()
     if user and user.check_password(password):
         refresh = RefreshToken.for_user(user)
-        response = JsonResponse({
+        return Response({
             "success": True,
             "access_token": str(refresh.access_token)
         })
-        # ⚙️ Cookie ajustada para Render (permite frontend-backend en distintos dominios)
-        response.set_cookie(
-            key="access_token",
-            value=str(refresh.access_token),
-            httponly=True,
-            secure=False,      # mantener False mientras probás en Render
-            samesite="None"    # 👈 necesario para cross-site cookies
-        )
-        return response
-
-    return JsonResponse({"error": "Credenciales inválidas"}, status=400)
+    return Response({"error": "Credenciales inválidas"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # -----------------------------------
@@ -102,10 +162,7 @@ def login_view(request):
 # -----------------------------------
 @api_view(['POST'])
 def logout_view(request):
-    """Logout: elimina cookie HttpOnly"""
-    response = JsonResponse({"success": True})
-    response.delete_cookie("access_token")
-    return response
+    return Response({"success": True, "message": "Sesión cerrada correctamente"})
 
 
 # -----------------------------------
@@ -114,9 +171,7 @@ def logout_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def me_view(request):
-    """Devuelve info del usuario logueado con perfil"""
     user = request.user
-
     try:
         profile = user.userprofile
     except Exception:
@@ -142,27 +197,26 @@ def me_view(request):
 # -----------------------------------
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def toggle_favorite(request, property_id):
-    """Agrega o quita una propiedad de los favoritos del usuario (toggle)"""
+def add_favorite(request, property_id):
+    """Alterna una propiedad en favoritos (agrega o quita)."""
     property_obj = get_object_or_404(Property, id=property_id)
-    favorite = Favorite.objects.filter(user=request.user, property=property_obj).first()
+    user = request.user
 
-    property_data = PropertySerializer(property_obj, context={'request': request}).data
-
-    if favorite:
-        favorite.delete()
-        return Response({
-            "status": "removed",
-            "message": "✅ Favorito eliminado.",
-            "property": property_data
-        }, status=status.HTTP_200_OK)
+    existing = Favorite.objects.filter(user=user, property=property_obj).first()
+    if existing:
+        existing.delete()
+        return Response(
+            {"action": "removed", "property_id": property_id},
+            status=status.HTTP_200_OK
+        )
     else:
-        Favorite.objects.create(user=request.user, property=property_obj)
-        return Response({
-            "status": "added",
-            "message": "✅ Propiedad agregada a favoritos.",
-            "property": property_data
-        }, status=status.HTTP_201_CREATED)
+        favorite = Favorite.objects.create(user=user, property=property_obj)
+        serializer = FavoriteSerializer(favorite, context={'request': request})
+        return Response(
+            {"action": "added", "favorite": serializer.data},
+            status=status.HTTP_201_CREATED
+        )
+
 
 
 @api_view(['GET'])
@@ -171,26 +225,19 @@ def list_favorites(request):
     """Lista las propiedades favoritas del usuario"""
     favorites = Favorite.objects.filter(user=request.user)
     serializer = FavoriteSerializer(favorites, many=True, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.data)
 
 
 # -----------------------------------
-# Consultas de agentes (Contactar Agente)
+# Consultas
 # -----------------------------------
-@csrf_exempt  # 👈 Este debe ir primero para evitar error CSRF
 @api_view(['POST'])
 def crear_consulta(request):
-    """
-    Guarda una nueva consulta enviada desde el formulario Contactar Agente
-    """
-    print("📩 Datos recibidos:", request.data)  # debug opcional
     serializer = ConsultaSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        print("✅ Consulta guardada correctamente")  # debug opcional
         return Response(
             {"message": "✅ Consulta registrada correctamente", "consulta": serializer.data},
             status=status.HTTP_201_CREATED
         )
-    print("❌ Errores del serializer:", serializer.errors)  # debug opcional
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

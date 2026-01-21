@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import PropertyDetail from "./pages/PropertyDetail";
 import ContactarAgente from "./pages/ContactarAgente"; // 👈 NUEVO
 import { Routes, Route } from "react-router-dom";
+import MiniChat from "./components/MiniChat";
 
 export default function App() {
   return (
@@ -20,8 +21,14 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/properties/:id" element={<PropertyDetail />} />
-        <Route path="/contactar-agente/:propiedadId" element={<ContactarAgente />} /> {/* 👈 NUEVA */}
+        <Route
+          path="/contactar-agente/:propiedadId"
+          element={<ContactarAgente />}
+        />
       </Routes>
+
+      {/* 🔹 Mini Chat disponible en todas las páginas */}
+      <MiniChat />
     </>
   );
 }
